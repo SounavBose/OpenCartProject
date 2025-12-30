@@ -1,0 +1,25 @@
+<suite name="MasterSuite">
+<test thread-count="5" name="Test">
+
+<listeners>
+<listener class-name="utilities.ExtentReportManager"/>
+</listeners>
+
+<parameter name="os" value="Windows"/>
+<parameter name="browser" value="chrome"/>
+<groups>
+<run>
+<include name="master"/>
+  <!--include name="sanity" /-->
+			<!--include name="regression" />  -->
+<exclude name=""/>
+</run>
+</groups>
+<classes>
+<class name="testCases.TC001_AccountRegistrationTest"/>
+<class name="testCases.TC002_LoginTest"/>
+</classes>
+</test>
+<!--  Test  -->
+</suite>
+<!--  Suite  -->
