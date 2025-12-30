@@ -19,6 +19,7 @@ import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
 
 public class BaseClass {
@@ -28,7 +29,7 @@ public class BaseClass {
 
 	@BeforeClass(groups = { "regression", "sanity", "master" })
 	@Parameters({ "os", "browser" })
-	public void setup(String os, String br) throws IOException {
+	public void setup(@Optional String os, String br) throws IOException {
 
 		// Loading config.properties file
 
