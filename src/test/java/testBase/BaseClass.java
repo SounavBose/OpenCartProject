@@ -9,8 +9,8 @@ import java.util.Date;
 import java.util.Properties;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.logging.log4j.LogManager;//log4j
-import org.apache.logging.log4j.Logger; //log4j
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -19,82 +19,89 @@ import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Optional;
-import org.testng.annotations.Parameters;
 
 public class BaseClass {
-	public static WebDriver driver;
-	public Logger logger; // Log4j
-	public Properties p;
 
-	@BeforeClass(groups = { "regression", "sanity", "master" })
-	@Parameters({ "os", "browser" })
-	public void setup(@Optional String os, @Optional String br) throws IOException {
+    protected static WebDriver driver;
+    protected Logger logger;
+    protected Properties p;
 
-		// Loading config.properties file
+    @BeforeClass(alwaysRun = true)
+    public void setup() throws IOException {
 
-		FileReader file = new FileReader("./src//test//resources//config.properties");
-		p = new Properties();
-		p.load(file);
+        // Load config.properties
+        FileReader file = new FileReader("./src/test/resources/config.properties");
+        p = new Properties();
+        p.load(file);
 
-		logger = LogManager.getLogger(this.getClass());// Log4j
+        logger = LogManager.getLogger(this.getClass());
 
-		switch (br.toLowerCase()) {
-		case "chrome":
-			driver = new ChromeDriver();
-			break;
-		case "edge":
-			driver = new EdgeDriver();
-			break;
-		case "firefox":
-			driver = new FirefoxDriver();
-			break;
-		default:
-			System.out.println("Invalid Browser......");
-			return;
-		}
+        // Read from CI / Maven / Jenkins
+        String browser = System.getProperty("browser", "chrome").toLowerCase();
+        String os = System.getProperty("os", "Windows");
 
-		driver.manage().deleteAllCookies();
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        logger.info("Running tests on OS: {}", os);
+        logger.info("Running tests on Browser: {}", browser);
 
-		driver.get(p.getProperty("appURL"));
-		driver.manage().window().maximize();
-	}
+        // Browser selection
+        switch (browser) {
+            case "chrome":
+                driver = new ChromeDriver();
+                break;
 
-	@AfterClass(groups = { "regression", "sanity", "master" })
-	public void tearDown() {
-		driver.quit();
-	}
+            case "edge":
+                driver = new EdgeDriver();
+                break;
 
-	public String captureScreen(String tname) throws IOException {
+            case "firefox":
+                driver = new FirefoxDriver();
+                break;
 
-		String timeStamp = new SimpleDateFormat("yyyyMMddhhmmss").format(new Date());
+            default:
+                throw new RuntimeException("Unsupported browser: " + browser);
+        }
 
-		TakesScreenshot takesScreenshot = (TakesScreenshot) driver;
-		File sourceFile = takesScreenshot.getScreenshotAs(OutputType.FILE);
+        driver.manage().deleteAllCookies();
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        driver.manage().window().maximize();
 
-		String targetFilePath = System.getProperty("user.dir") + "\\screenshots\\" + tname + "_" + timeStamp + ".png";
-		File targetFile = new File(targetFilePath);
+        driver.get(p.getProperty("appURL"));
+    }
 
-		sourceFile.renameTo(targetFile);
+    @AfterClass(alwaysRun = true)
+    public void tearDown() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
 
-		return targetFilePath;
+    // ----------------- Utilities -----------------
 
-	}
+    public String captureScreen(String testName) throws IOException {
 
-	public String randomeString() {
-		String generatedstring = RandomStringUtils.randomAlphabetic(5);
-		return generatedstring;
-	}
+        String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+        TakesScreenshot ts = (TakesScreenshot) driver;
+        File source = ts.getScreenshotAs(OutputType.FILE);
 
-	public String randomeNumber() {
-		String generatednumber = RandomStringUtils.randomNumeric(10);
-		return generatednumber;
-	}
+        String targetPath = System.getProperty("user.dir")
+                + "/screenshots/" + testName + "_" + timeStamp + ".png";
 
-	public String randomeAlphaNumeric() {
-		String generatednumber = RandomStringUtils.randomNumeric(3);
-		String generatedstring = RandomStringUtils.randomAlphabetic(3);
-		return (generatedstring + "@" + generatednumber);
-	}
+        File target = new File(targetPath);
+        source.renameTo(target);
+
+        return targetPath;
+    }
+
+    public String randomeString() {
+        return RandomStringUtils.randomAlphabetic(5);
+    }
+
+    public String randomeNumber() {
+        return RandomStringUtils.randomNumeric(10);
+    }
+
+    public String randomeAlphaNumeric() {
+        return RandomStringUtils.randomAlphabetic(3) + "@"
+                + RandomStringUtils.randomNumeric(3);
+    }
 }
